@@ -1,26 +1,3 @@
-ALLOWED_ORIGIN = "https://ai-email-generator-neon.vercel.app/"
-
-import os
-import base64
-import pickle
-import requests
-
-from email.mime.text import MIMEText
-
-from fastapi import FastAPI
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-
-from fastapi import Request, HTTPException
-
-from dotenv import load_dotenv
-load_dotenv()
-
-
 
 import os
 import base64
@@ -40,12 +17,26 @@ from google.auth.transport.requests import Request
 from dotenv import load_dotenv
 load_dotenv()
 
-def verify_origin(request: Request):
-    origin = request.headers.get("origin")
-    referer = request.headers.get("referer")
 
-    if origin != ALLOWED_ORIGIN and (not referer or not referer.startswith(ALLOWED_ORIGIN)):
-        raise HTTPException(status_code=403, detail="Access forbidden")
+
+import os
+import base64
+import pickle
+import requests
+
+from email.mime.text import MIMEText
+
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # -----------------------------
 # CONFIG
@@ -291,8 +282,7 @@ LAST_GENERATED_EMAIL = None
 # -----------------------------
 
 @app.post("/generate")
-def generate_api(req: GenerateRequest, request: Request):
-    verify_origin(request)
+def generate_api(req: GenerateRequest):
     global LAST_GENERATED_EMAIL
 
     LAST_GENERATED_EMAIL = generate_email(
