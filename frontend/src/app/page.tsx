@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import InfiniteGrid from "@/components/ui/infinite-grid-integration";
 import ReactMarkdown from "react-markdown";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, easeOut } from "framer-motion";
 import { SplineSceneBasic } from "@/components/ui/demo";
 
 export default function Home() {
@@ -16,7 +15,7 @@ export default function Home() {
       y: 0,
       transition: {
         duration: prefersReducedMotion ? 0 : 0.6,
-        ease: "easeOut",
+        ease: easeOut,
       },
     },
   };
@@ -39,17 +38,20 @@ export default function Home() {
     setTimeout(() => controller.abort(), 10000);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          context,
-          dates,
-          key_points: keyPoints,
-          name,
-        }),
-        signal: controller.signal,
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            context,
+            dates,
+            key_points: keyPoints,
+            name,
+          }),
+          signal: controller.signal,
+        }
+      );
 
       const data = await res.json();
       setPreview(data.email);
@@ -149,7 +151,7 @@ export default function Home() {
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              transition={{ duration: 0.8, ease: easeOut }}
               className="relative hidden lg:block"
             >
               <SplineSceneBasic />
@@ -205,4 +207,4 @@ export default function Home() {
       </div>
     </main>
   );
-} 
+}
