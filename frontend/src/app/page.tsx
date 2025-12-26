@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import InfiniteGrid from "@/components/ui/infinite-grid-integration";
 import ReactMarkdown from "react-markdown";
 import { motion, useReducedMotion } from "framer-motion";
 import { SplineSceneBasic } from "@/components/ui/demo";
