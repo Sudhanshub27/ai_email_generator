@@ -3,7 +3,12 @@ import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { motion, useSpring, useTransform } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
-export function SpotlightHover({ className, size = 200 }) {
+interface SpotlightHoverProps {
+  className?: string
+  size?: number
+}
+
+export function SpotlightHover({ className, size = 200 }: SpotlightHoverProps) {
   const ref = useRef<HTMLDivElement>(null)
   const mouseX = useSpring(0)
   const mouseY = useSpring(0)
