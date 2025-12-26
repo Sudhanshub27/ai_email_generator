@@ -3,7 +3,10 @@ import base64
 import pickle
 from email.mime.text import MIMEText
 
-import gradio as gr
+from fastapi import FastAPI
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
 from openai import OpenAI
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -14,9 +17,11 @@ from google.auth.transport.requests import Request
 # -----------------------------
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
-IS_HOSTED = os.environ.get("SPACE_ID") is not None  # Hugging Face detection
 
-# Ollama (local)
+# Detect hosted environment (for future)
+IS_HOSTED = os.environ.get("VERCEL") or os.environ.get("RENDER")
+
+# Ollama (local LLM)
 openai = OpenAI(
     base_url="http://localhost:11434/v1",
     api_key="ollama"
@@ -33,12 +38,40 @@ STRICT RULES:
 """
 
 # -----------------------------
-# GMAIL LOGIC (LOCAL ONLY)
+# FASTAPI APP
+# -----------------------------
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Next.js frontend
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# -----------------------------
+# REQUEST MODELS
+# -----------------------------
+
+class GenerateRequest(BaseModel):
+    context: str
+    dates: str
+    key_points: str
+    name: str
+
+
+class SendRequest(BaseModel):
+    to_email: str
+
+
+# -----------------------------
+# GMAIL (LOCAL / DEMO ONLY)
 # -----------------------------
 
 def send_gmail(to_email, subject, body):
     if IS_HOSTED:
-        return "❌ Email sending is disabled on hosted version."
+        return "❌ Email sending disabled on hosted version."
 
     creds = None
 
@@ -118,79 +151,36 @@ def parse_email(md_text):
 
 
 # -----------------------------
-# PREVIEW → SEND FLOW
+# PREVIEW STORAGE (MVP)
 # -----------------------------
 
 LAST_GENERATED_EMAIL = None
 
 
-def preview_email(context, key_points, name, dates):
+# -----------------------------
+# API ENDPOINTS
+# -----------------------------
+
+@app.post("/generate")
+def generate_api(req: GenerateRequest):
     global LAST_GENERATED_EMAIL
-    LAST_GENERATED_EMAIL = generate_email(context, key_points, name, dates)
-    return LAST_GENERATED_EMAIL
+
+    LAST_GENERATED_EMAIL = generate_email(
+        req.context,
+        req.key_points,
+        req.name,
+        req.dates
+    )
+
+    return {"email": LAST_GENERATED_EMAIL}
 
 
-def send_previewed_email(to_email):
-    global LAST_GENERATED_EMAIL
-
+@app.post("/send")
+def send_api(req: SendRequest):
     if LAST_GENERATED_EMAIL is None:
-        return "❌ Please generate an email first."
+        return {"error": "Generate email first"}
 
     subject, body = parse_email(LAST_GENERATED_EMAIL)
-    return send_gmail(to_email, subject, body)
+    result = send_gmail(req.to_email, subject, body)
 
-
-# -----------------------------
-# GRADIO UI
-# -----------------------------
-
-with gr.Blocks(title="AI Email Generator") as demo:
-
-    gr.Markdown("## ✉️ AI Email Generator")
-
-    context = gr.Textbox(
-        label="What is the email about?",
-        placeholder="e.g., Academic lab absence"
-    )
-
-    dates = gr.Textbox(
-        label="Relevant Dates",
-        placeholder="e.g., Thursday, 12 Sept 2025"
-    )
-
-    key_points = gr.Textbox(
-        label="Key Points",
-        lines=5,
-        placeholder="- Reason\n- Request\n- Submission plan"
-    )
-
-    name = gr.Textbox(
-        label="Your Name",
-        placeholder="e.g., Sudhanshu Batra"
-    )
-
-    to_email = gr.Textbox(
-        label="Send To (Email)",
-        placeholder="example@gmail.com"
-    )
-
-    with gr.Row():
-        generate_btn = gr.Button("🔄 Generate / Preview")
-        send_btn = gr.Button("📨 Send Email")
-
-    preview = gr.Markdown(label="📄 Email Preview")
-    status = gr.Markdown()
-
-    generate_btn.click(
-        fn=preview_email,
-        inputs=[context, key_points, name, dates],
-        outputs=preview
-    )
-
-    send_btn.click(
-        fn=send_previewed_email,
-        inputs=to_email,
-        outputs=status
-    )
-
-demo.launch(inbrowser=not IS_HOSTED)
+    return {"status": result}
