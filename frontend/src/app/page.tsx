@@ -89,14 +89,29 @@ export default function Home() {
   };
 
   const openInGmail = (to: string, subject: string, body: string) => {
-    const gmailUrl =
-      "https://mail.google.com/mail/?view=cm&fs=1" +
-      `&to=${encodeURIComponent(to)}` +
-      `&su=${encodeURIComponent(subject)}` +
-      `&body=${encodeURIComponent(body)}`;
-
-    window.open(gmailUrl, "_blank");
+    const encodedSubject = encodeURIComponent(subject);
+    const encodedBody = encodeURIComponent(body);
+    const encodedTo = encodeURIComponent(to);
+  
+    const isMobile =
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  
+    if (isMobile) {
+      // ✅ Opens default mail app / Gmail app on phone
+      window.location.href =
+        `mailto:${encodedTo}?subject=${encodedSubject}&body=${encodedBody}`;
+    } else {
+      // ✅ Opens Gmail web compose on desktop
+      const gmailUrl =
+        "https://mail.google.com/mail/?view=cm&fs=1" +
+        `&to=${encodedTo}` +
+        `&su=${encodedSubject}` +
+        `&body=${encodedBody}`;
+  
+      window.open(gmailUrl, "_blank");
+    }
   };
+  
 
   const renderedMarkdown = useMemo(
     () => <ReactMarkdown>{editableDraft}</ReactMarkdown>,
