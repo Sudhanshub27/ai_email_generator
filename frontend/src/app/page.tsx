@@ -24,11 +24,16 @@ export default function Home() {
   const [dates, setDates] = useState("");
   const [keyPoints, setKeyPoints] = useState("");
   const [name, setName] = useState("");
+  const [toEmail, setToEmail] = useState("");
 
   const [preview, setPreview] = useState("");
   const [editableDraft, setEditableDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // Soft email validation
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const generateEmail = async () => {
     setLoading(true);
@@ -56,11 +61,44 @@ export default function Home() {
       const data = await res.json();
       setPreview(data.email);
       setEditableDraft(data.email);
-    } catch (err) {
+    } catch {
       console.error("Request failed or timed out");
     } finally {
       setLoading(false);
     }
+  };
+
+  // ✅ CLEAN SUBJECT/BODY EXTRACTION (KEY FIX)
+  const extractSubjectAndBody = (md: string, fallbackSubject: string) => {
+    // 1. Extract subject if present
+    const subjectMatch = md.match(/## Subject([\s\S]*?)## Email Body/);
+    const subject = subjectMatch
+      ? subjectMatch[1].trim()
+      : fallbackSubject || "Regarding your request";
+  
+    // 2. Extract body
+    let body = md.match(/## Email Body([\s\S]*)/)
+      ? md.match(/## Email Body([\s\S]*)/)![1].trim()
+      : md.trim();
+  
+    // 3. Remove any "Subject: ..." line from body
+    body = body.replace(/^Subject:\s.*$/im, "").trim();
+  
+    // 4. Clean extra blank lines
+    body = body.replace(/\n{3,}/g, "\n\n");
+  
+    return { subject, body };
+  };
+  
+  
+  const openInGmail = (to: string, subject: string, body: string) => {
+    const gmailUrl =
+      "https://mail.google.com/mail/?view=cm&fs=1" +
+      `&to=${encodeURIComponent(to)}` +
+      `&su=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
+
+    window.open(gmailUrl, "_blank");
   };
 
   const renderedMarkdown = useMemo(
@@ -80,9 +118,7 @@ export default function Home() {
           viewport={{ once: true }}
           className="text-center max-w-2xl mx-auto"
         >
-          <h1 className="text-4xl font-medium">
-            AI Email Generator
-          </h1>
+          <h1 className="text-4xl font-medium">AI Email Generator</h1>
           <p className="mt-3 text-zinc-400">
             Write professional emails with AI.
           </p>
@@ -135,6 +171,21 @@ export default function Home() {
                 onChange={(e) => setName(e.target.value)}
               />
 
+              {/* Recipient */}
+              <input
+                className={`w-full rounded-xl bg-white/10 border px-4 py-3
+                  placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-white/20
+                  ${
+                    toEmail && !isValidEmail(toEmail)
+                      ? "border-yellow-400/40"
+                      : "border-white/15"
+                  }
+                `}
+                placeholder="Recipient email (required for Gmail)"
+                value={toEmail}
+                onChange={(e) => setToEmail(e.target.value)}
+              />
+
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -146,7 +197,7 @@ export default function Home() {
               </motion.button>
             </div>
 
-            {/* ROBOT (DESKTOP ONLY) */}
+            {/* ROBOT */}
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -188,6 +239,29 @@ export default function Home() {
                   className="px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20"
                 >
                   Regenerate
+                </button>
+
+                {/* ✅ FIXED: SUBJECT NOT IN BODY */}
+                <button
+                  disabled={!isValidEmail(toEmail)}
+                  title="Opens Gmail draft. You click Send."
+                  onClick={() => {
+                    const { subject, body } = extractSubjectAndBody(
+                      editableDraft,
+                      context
+                    );
+                    openInGmail(toEmail, subject, body);
+                  }}
+                  
+                  className={`px-3 py-1.5 rounded-md font-medium transition
+                    ${
+                      isValidEmail(toEmail)
+                        ? "bg-white text-black hover:bg-zinc-200"
+                        : "bg-white/10 text-zinc-400 cursor-not-allowed"
+                    }
+                  `}
+                >
+                  Open in Gmail
                 </button>
               </div>
             </div>
