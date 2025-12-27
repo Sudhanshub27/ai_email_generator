@@ -137,26 +137,30 @@ export default function Home() {
           <div className="relative grid grid-cols-1 lg:grid-cols-2 min-h-[440px]">
 
             <div className="p-8 space-y-4">
-              <input className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
+              <input
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="What is the email about?"
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
               />
 
-              <input className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
+              <input
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Relevant dates"
                 value={dates}
                 onChange={(e) => setDates(e.target.value)}
               />
 
-              <textarea rows={3}
+              <textarea
+                rows={3}
                 className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Key points"
                 value={keyPoints}
                 onChange={(e) => setKeyPoints(e.target.value)}
               />
 
-              <input className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
+              <input
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -205,11 +209,11 @@ export default function Home() {
             className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4"
           >
             <div className="flex justify-between items-center gap-2 flex-nowrap">
-              <h2 className="text-lg font-medium whitespace-nowrap">
+              <h2 className="text-lg font-medium whitespace-nowrap shrink-0">
                 Email Draft
               </h2>
 
-              <div className="flex items-center gap-2 flex-nowrap">
+              <div className="flex items-center gap-2 flex-nowrap overflow-x-auto max-w-[70vw]">
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(editableDraft);
