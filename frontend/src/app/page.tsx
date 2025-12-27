@@ -31,16 +31,12 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  // Soft email validation
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const generateEmail = async () => {
     setLoading(true);
     setCopied(false);
-
-    const controller = new AbortController();
-    setTimeout(() => controller.abort(), 10000);
 
     try {
       const res = await fetch(
@@ -54,7 +50,6 @@ export default function Home() {
             key_points: keyPoints,
             name,
           }),
-          signal: controller.signal,
         }
       );
 
@@ -62,35 +57,37 @@ export default function Home() {
       setPreview(data.email);
       setEditableDraft(data.email);
     } catch {
-      console.error("Request failed or timed out");
+      console.error("Generation failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ CLEAN SUBJECT/BODY EXTRACTION (KEY FIX)
-  const extractSubjectAndBody = (md: string, fallbackSubject: string) => {
-    // 1. Extract subject if present
-    const subjectMatch = md.match(/## Subject([\s\S]*?)## Email Body/);
-    const subject = subjectMatch
-      ? subjectMatch[1].trim()
-      : fallbackSubject || "Regarding your request";
-  
-    // 2. Extract body
-    let body = md.match(/## Email Body([\s\S]*)/)
-      ? md.match(/## Email Body([\s\S]*)/)![1].trim()
-      : md.trim();
-  
-    // 3. Remove any "Subject: ..." line from body
-    body = body.replace(/^Subject:\s.*$/im, "").trim();
-  
-    // 4. Clean extra blank lines
-    body = body.replace(/\n{3,}/g, "\n\n");
-  
+  /* ======================================================
+     ✅ FINAL SUBJECT / BODY EXTRACTION (FIXED)
+     ====================================================== */
+  const extractSubjectAndBody = (text: string) => {
+    let subject = "";
+    let body = text.trim();
+
+    // Robustly match ANY "Subject : xyz" variant
+    const subjectMatch = text.match(/^\s*subject\s*:\s*(.+)$/im);
+
+    if (subjectMatch) {
+      subject = subjectMatch[1].trim();
+      body = text.replace(subjectMatch[0], "").trim();
+    }
+
+    // Never allow empty subject
+    if (!subject || subject.length < 3) {
+      subject = "Regarding your request";
+    }
+
+    body = body.replace(/\n{3,}/g, "\n\n").trim();
+
     return { subject, body };
   };
-  
-  
+
   const openInGmail = (to: string, subject: string, body: string) => {
     const gmailUrl =
       "https://mail.google.com/mail/?view=cm&fs=1" +
@@ -139,16 +136,14 @@ export default function Home() {
             {/* FORM */}
             <div className="p-8 space-y-4">
               <input
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3
-                           placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-white/20"
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="What is the email about?"
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
               />
 
               <input
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3
-                           placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-white/20"
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Relevant dates"
                 value={dates}
                 onChange={(e) => setDates(e.target.value)}
@@ -156,31 +151,25 @@ export default function Home() {
 
               <textarea
                 rows={3}
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3
-                           placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-white/20"
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Key points"
                 value={keyPoints}
                 onChange={(e) => setKeyPoints(e.target.value)}
               />
 
               <input
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3
-                           placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-white/20"
+                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
 
-              {/* Recipient */}
               <input
-                className={`w-full rounded-xl bg-white/10 border px-4 py-3
-                  placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-white/20
-                  ${
-                    toEmail && !isValidEmail(toEmail)
-                      ? "border-yellow-400/40"
-                      : "border-white/15"
-                  }
-                `}
+                className={`w-full rounded-xl bg-white/10 border px-4 py-3 ${
+                  toEmail && !isValidEmail(toEmail)
+                    ? "border-yellow-400/40"
+                    : "border-white/15"
+                }`}
                 placeholder="Recipient email (required for Gmail)"
                 value={toEmail}
                 onChange={(e) => setToEmail(e.target.value)}
@@ -191,7 +180,7 @@ export default function Home() {
                 whileTap={{ scale: 0.98 }}
                 onClick={generateEmail}
                 disabled={loading}
-                className="w-full rounded-xl bg-white text-black py-3 font-medium hover:bg-zinc-200 transition"
+                className="w-full rounded-xl bg-white text-black py-3 font-medium"
               >
                 {loading ? "Generating..." : "Generate Email"}
               </motion.button>
@@ -229,37 +218,30 @@ export default function Home() {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 1200);
                   }}
-                  className="px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20"
+                  className="px-3 py-1.5 rounded-md bg-white/10"
                 >
                   {copied ? "Copied" : "Copy"}
                 </button>
 
                 <button
                   onClick={generateEmail}
-                  className="px-3 py-1.5 rounded-md bg-white/10 hover:bg-white/20"
+                  className="px-3 py-1.5 rounded-md bg-white/10"
                 >
                   Regenerate
                 </button>
 
-                {/* ✅ FIXED: SUBJECT NOT IN BODY */}
                 <button
                   disabled={!isValidEmail(toEmail)}
-                  title="Opens Gmail draft. You click Send."
                   onClick={() => {
-                    const { subject, body } = extractSubjectAndBody(
-                      editableDraft,
-                      context
-                    );
+                    const { subject, body } =
+                      extractSubjectAndBody(editableDraft);
                     openInGmail(toEmail, subject, body);
                   }}
-                  
-                  className={`px-3 py-1.5 rounded-md font-medium transition
-                    ${
-                      isValidEmail(toEmail)
-                        ? "bg-white text-black hover:bg-zinc-200"
-                        : "bg-white/10 text-zinc-400 cursor-not-allowed"
-                    }
-                  `}
+                  className={`px-3 py-1.5 rounded-md font-medium ${
+                    isValidEmail(toEmail)
+                      ? "bg-white text-black"
+                      : "bg-white/10 text-zinc-400 cursor-not-allowed"
+                  }`}
                 >
                   Open in Gmail
                 </button>
@@ -267,8 +249,7 @@ export default function Home() {
             </div>
 
             <textarea
-              className="w-full min-h-[200px] rounded-xl bg-white/10 border border-white/15 px-4 py-3
-                         focus:outline-none focus:ring-2 focus:ring-white/20"
+              className="w-full min-h-[200px] rounded-xl bg-white/10 border border-white/15 px-4 py-3"
               value={editableDraft}
               onChange={(e) => setEditableDraft(e.target.value)}
             />
