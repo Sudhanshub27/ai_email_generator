@@ -63,28 +63,21 @@ export default function Home() {
     }
   };
 
-  /* ======================================================
-     ✅ FINAL SUBJECT / BODY EXTRACTION (FIXED)
-     ====================================================== */
   const extractSubjectAndBody = (text: string) => {
     let subject = "";
     let body = text.trim();
 
-    // Robustly match ANY "Subject : xyz" variant
     const subjectMatch = text.match(/^\s*subject\s*:\s*(.+)$/im);
-
     if (subjectMatch) {
       subject = subjectMatch[1].trim();
       body = text.replace(subjectMatch[0], "").trim();
     }
 
-    // Never allow empty subject
     if (!subject || subject.length < 3) {
       subject = "Regarding your request";
     }
 
     body = body.replace(/\n{3,}/g, "\n\n").trim();
-
     return { subject, body };
   };
 
@@ -92,26 +85,23 @@ export default function Home() {
     const encodedSubject = encodeURIComponent(subject);
     const encodedBody = encodeURIComponent(body);
     const encodedTo = encodeURIComponent(to);
-  
+
     const isMobile =
       /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  
+
     if (isMobile) {
-      // ✅ Opens default mail app / Gmail app on phone
       window.location.href =
         `mailto:${encodedTo}?subject=${encodedSubject}&body=${encodedBody}`;
     } else {
-      // ✅ Opens Gmail web compose on desktop
       const gmailUrl =
         "https://mail.google.com/mail/?view=cm&fs=1" +
         `&to=${encodedTo}` +
         `&su=${encodedSubject}` +
         `&body=${encodedBody}`;
-  
+
       window.open(gmailUrl, "_blank");
     }
   };
-  
 
   const renderedMarkdown = useMemo(
     () => <ReactMarkdown>{editableDraft}</ReactMarkdown>,
@@ -122,7 +112,6 @@ export default function Home() {
     <main className="min-h-screen bg-[#0a0d14] text-white">
       <div className="max-w-6xl mx-auto px-6 py-20 space-y-20">
 
-        {/* HEADER */}
         <motion.header
           variants={fadeUp}
           initial="hidden"
@@ -136,7 +125,6 @@ export default function Home() {
           </p>
         </motion.header>
 
-        {/* MAIN TOOL */}
         <motion.section
           variants={fadeUp}
           initial="hidden"
@@ -148,32 +136,27 @@ export default function Home() {
 
           <div className="relative grid grid-cols-1 lg:grid-cols-2 min-h-[440px]">
 
-            {/* FORM */}
             <div className="p-8 space-y-4">
-              <input
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
+              <input className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="What is the email about?"
                 value={context}
                 onChange={(e) => setContext(e.target.value)}
               />
 
-              <input
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
+              <input className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Relevant dates"
                 value={dates}
                 onChange={(e) => setDates(e.target.value)}
               />
 
-              <textarea
-                rows={3}
+              <textarea rows={3}
                 className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Key points"
                 value={keyPoints}
                 onChange={(e) => setKeyPoints(e.target.value)}
               />
 
-              <input
-                className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
+              <input className="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3"
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -201,7 +184,6 @@ export default function Home() {
               </motion.button>
             </div>
 
-            {/* ROBOT */}
             <motion.div
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -214,7 +196,6 @@ export default function Home() {
           </div>
         </motion.section>
 
-        {/* PREVIEW */}
         {preview && (
           <motion.section
             variants={fadeUp}
@@ -223,24 +204,26 @@ export default function Home() {
             viewport={{ once: true }}
             className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4"
           >
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-medium">Email Draft</h2>
+            <div className="flex justify-between items-center gap-2 flex-nowrap">
+              <h2 className="text-lg font-medium whitespace-nowrap">
+                Email Draft
+              </h2>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-nowrap">
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(editableDraft);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 1200);
                   }}
-                  className="px-3 py-1.5 rounded-md bg-white/10"
+                  className="px-3 py-1.5 text-sm rounded-md bg-white/10 hover:bg-white/20 whitespace-nowrap"
                 >
                   {copied ? "Copied" : "Copy"}
                 </button>
 
                 <button
                   onClick={generateEmail}
-                  className="px-3 py-1.5 rounded-md bg-white/10"
+                  className="px-3 py-1.5 text-sm rounded-md bg-white/10 hover:bg-white/20 whitespace-nowrap"
                 >
                   Regenerate
                 </button>
@@ -252,9 +235,9 @@ export default function Home() {
                       extractSubjectAndBody(editableDraft);
                     openInGmail(toEmail, subject, body);
                   }}
-                  className={`px-3 py-1.5 rounded-md font-medium ${
+                  className={`px-3 py-1.5 text-sm rounded-md font-medium whitespace-nowrap transition ${
                     isValidEmail(toEmail)
-                      ? "bg-white text-black"
+                      ? "bg-white text-black hover:bg-zinc-200"
                       : "bg-white/10 text-zinc-400 cursor-not-allowed"
                   }`}
                 >
