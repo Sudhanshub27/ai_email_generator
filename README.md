@@ -79,7 +79,7 @@ This design mirrors real-world tools like **Grammarly** and **Notion AI**, where
 
 ### Deployment
 - **Frontend:** Vercel
-- **Backend:** Railway
+- **Backend:** Render
 
 ---
 
