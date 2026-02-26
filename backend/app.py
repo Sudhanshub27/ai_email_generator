@@ -1,42 +1,17 @@
-
 import os
 import base64
 import pickle
 import requests
-
 from email.mime.text import MIMEText
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-
 from dotenv import load_dotenv
+
 load_dotenv()
-
-
-
-import os
-import base64
-import pickle
-import requests
-
-from email.mime.text import MIMEText
-
-from fastapi import FastAPI
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-
-from dotenv import load_dotenv
-load_dotenv()
-
 
 # -----------------------------
 # CONFIG
@@ -47,7 +22,7 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 # Railway sets this automatically
 IS_HOSTED = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
 
-OPENROUTER_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # -----------------------------
 # SYSTEM PROMPT
@@ -61,32 +36,14 @@ Your task is to write clear, polished, and purpose-driven emails suitable for ac
 You must strictly follow professional email standards, adapt tone based on context, and ensure clarity, correctness, and respectfulness at all times.
 
 -----------------------------
-CORE RESPONSIBILITIES
+TONE GUIDELINES
 -----------------------------
-1. Understand the intent of the email:
-   - Request
-   - Apology
-   - Follow-up
-   - Complaint
-   - Explanation
-   - Permission / Approval
-   - Notification
-   - Formal submission
-   - Reminder
-
-2. Adapt tone based on context:
-   - Formal (professors, managers, officials, institutions)
-   - Semi-formal (colleagues, seniors you know)
-   - Polite but firm (complaints, follow-ups)
-   - Neutral-professional (general workplace emails)
-
-3. Ensure the email sounds:
-   - Professional
-   - Polite
-   - Clear
-   - Concise
-   - Non-repetitive
-   - Grammatically correct
+- **Formal**: Use sophisticated vocabulary, avoid contractions, and maintain a respectful distance.
+- **Semi-Formal**: Professional but slightly more approachable, suitable for colleagues.
+- **Friendly/Casual**: Cooperative and warm, while remaining professional.
+- **Urgent**: Concise, direct, and emphasizes the need for a quick response.
+- **Persuasive**: Compelling language used to influence or convince the recipient.
+- **Polite/Humble**: Softened language, often for requests or apologies.
 
 -----------------------------
 EMAIL STRUCTURE (MANDATORY)
@@ -99,10 +56,7 @@ EMAIL STRUCTURE (MANDATORY)
    - Capitalize first letter only
 
 2. SALUTATION
-   - "Dear Sir,"
-   - "Dear Ma’am,"
-   - "Dear Professor [Last Name],"
-   - "Dear [Designation/Name],"
+   - Appropriate for the chosen tone and recipient.
 
 3. OPENING LINE
    - Polite and respectful
@@ -111,19 +65,16 @@ EMAIL STRUCTURE (MANDATORY)
 4. BODY
    - Short paragraphs
    - Clear explanation
-   - Respectful tone
+   - Tone-appropriate language
 
 5. REQUEST / ACTION
-   - "I kindly request..."
-   - "I would appreciate it if..."
+   - Clear and professional call to action.
 
 6. CLOSING
-   - "Thank you for your time and understanding."
-   - "I appreciate your consideration."
+   - Professional closing statement.
 
 7. SIGN-OFF
-   - "Regards,"
-   - "Sincerely,"
+   - "Regards,", "Sincerely,", "Best,", etc.
 
 -----------------------------
 LANGUAGE RULES
@@ -137,7 +88,9 @@ LANGUAGE RULES
 OUTPUT FORMAT
 -----------------------------
 Return ONLY the final email.
+Start with "Subject: [Your Subject Line]" followed by the email body.
 Do NOT explain your reasoning.
+Do NOT use markdown bolding (like **) in the email content.
 """
 # -----------------------------
 # FASTAPI APP
@@ -149,6 +102,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:3010",
+        "http://localhost:3015",
         "*"  # lock this later to frontend domain
     ],
     allow_methods=["*"],
@@ -164,6 +119,8 @@ class GenerateRequest(BaseModel):
     dates: str
     key_points: str
     name: str
+    tone: str = "Formal"
+    template: str = "General"
 
 
 class SendRequest(BaseModel):
@@ -214,7 +171,7 @@ def send_gmail(to_email, subject, body):
 # AI GENERATION (OPENROUTER)
 # -----------------------------
 
-def generate_email(context, key_points, name, dates):
+def generate_email(context, key_points, name, dates, tone, template):
     url = "https://openrouter.ai/api/v1/chat/completions"
 
     headers = {
@@ -231,43 +188,62 @@ def generate_email(context, key_points, name, dates):
             {
                 "role": "user",
                 "content": f"""
-Context:
-{context}
+Context: {context}
+Dates: {dates}
+Key points: {key_points}
+Sender name: {name}
+Tone: {tone}
+Template Type: {template}
 
-Dates:
-{dates}
-
-Key points:
-{key_points}
-
-Sender name:
-{name}
-
-Write a professional email.
+Write a professional email following the requested tone and template style.
 """
             }
         ],
         "temperature": 0.7,
-        "max_tokens": 600
+        "max_tokens": 800
     }
 
-    response = requests.post(
-        url,
-        headers=headers,
-        json=payload,
-        timeout=30
-    )
+    print(f"🚀 Sending request to OpenRouter with tone: {tone}, template: {template}")
+    
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            print(f"❌ OpenRouter error (Status {response.status_code}): {response.text}")
+            return f"Error: AI service returned status {response.status_code}. {response.text[:100]}"
 
-    if response.status_code != 200:
-        print("❌ OpenRouter error:", response.text)
-        return "Error generating email. Please try again."
-
-    data = response.json()
-    return data["choices"][0]["message"]["content"]
+        data = response.json()
+        if "choices" not in data or not data["choices"]:
+            print(f"❌ Unexpected OpenRouter response structure: {data}")
+            return "Error: Received unexpected response from AI service."
+            
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"❌ Exception during OpenRouter request: {str(e)}")
+        return f"Error: Request failed. {str(e)}"
 
 
 def parse_email(text):
-    return "Generated Email", text
+    import re
+    # Remove extra starts (markdown bolding)
+    text = text.replace("**", "")
+    
+    subject = "Generated Email"
+    body = text
+
+    # Robust subject extraction
+    subject_match = re.search(r"^Subject:\s*(.*)$", text, re.IGNORECASE | re.MULTILINE)
+    if subject_match:
+        subject = subject_match.group(1).strip()
+        # Remove the subject line from the body
+        body = text.replace(subject_match.group(0), "").strip()
+    
+    return subject, body
 
 
 # -----------------------------
@@ -289,9 +265,16 @@ def generate_api(req: GenerateRequest):
         req.context,
         req.key_points,
         req.name,
-        req.dates
+        req.dates,
+        req.tone,
+        req.template
     )
 
+    return {"email": LAST_GENERATED_EMAIL}
+
+
+@app.get("/preview")
+def preview_api():
     return {"email": LAST_GENERATED_EMAIL}
 
 
@@ -312,7 +295,7 @@ def send_api(req: SendRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8080))
     uvicorn.run("app:app", host="0.0.0.0", port=port)
 
 
