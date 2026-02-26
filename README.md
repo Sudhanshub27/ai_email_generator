@@ -9,7 +9,7 @@ Instead of auto-sending emails, the app opens a **pre-filled Gmail draft** (on b
 ## 🌐 Live Demo
 
 👉 **Website:** https://ai-email-generator-neon.vercel.app/  
-👉 **Backend API (Swagger):** https://ai-email-generator.up.railway.app/docs  
+👉 **Backend API (Swagger):** https://ai-email-generator-6af2.onrender.com/docs  
 
 ---
 
@@ -79,7 +79,7 @@ This design mirrors real-world tools like **Grammarly** and **Notion AI**, where
 
 ### Deployment
 - **Frontend:** Vercel
-- **Backend:** Railway
+- **Backend:** Render
 
 ---
 
