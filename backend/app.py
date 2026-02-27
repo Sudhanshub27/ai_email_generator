@@ -19,8 +19,8 @@ load_dotenv()
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 
-# Railway sets this automatically
-IS_HOSTED = bool(os.environ.get("RAILWAY_ENVIRONMENT"))
+# Railway or Render set these automatically
+IS_HOSTED = bool(os.environ.get("RAILWAY_ENVIRONMENT")) or bool(os.environ.get("RENDER"))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
@@ -256,6 +256,11 @@ LAST_GENERATED_EMAIL = None
 # -----------------------------
 # API ENDPOINTS
 # -----------------------------
+
+@app.get("/")
+def root():
+    return {"status": "online", "message": "AI Email Generator API is running"}
+
 
 @app.post("/generate")
 def generate_api(req: GenerateRequest):
