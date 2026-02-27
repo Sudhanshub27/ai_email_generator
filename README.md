@@ -8,91 +8,74 @@ Instead of auto-sending emails, the app opens a **pre-filled Gmail draft** (on b
 
 ## 🌐 Live Demo
 
-👉 **Website:** https://ai-email-generator-neon.vercel.app/  
-👉 **Backend API (Swagger):** https://ai-email-generator-6af2.onrender.com/docs  
+👉 **Website:** [https://ai-email-generator-iota.vercel.app/](https://ai-email-generator-iota.vercel.app/)  
+👉 **Backend API (Swagger):** [https://ai-email-generator-6af2.onrender.com/docs](https://ai-email-generator-6af2.onrender.com/docs)  
 
 ---
 
 ## ✨ Key Features
 
-- 🧠 AI-generated professional email drafts  
-- ✍️ Clean structure: **Subject, Body, Sign-off**  
-- 📧 **Open in Gmail (Draft Mode)**  
-  - Subject auto-filled in Gmail **subject field**
-  - Email body cleaned and formatted
-  - Works seamlessly on **desktop and mobile**
-  - User manually sends the email (no automation misuse)
-- 📱 **Mobile-first responsive UI**
-  - Fully usable on phones and tablets
-  - Gmail / Mail app opens directly on mobile with draft pre-filled
-- 📝 Fully editable & copyable drafts
-- ⚡ FastAPI backend with REST API
-- 🎨 Modern Next.js UI with smooth animations
-- ☁️ Fully deployed (Frontend + Backend)
-
----
-
-## 📱 Mobile Experience (Fully Supported)
-
-The application is optimized for **mobile users**:
-
-- 📲 Responsive UI adapts cleanly to small screens
-- 📧 Clicking **Open in Gmail** on mobile:
-  - Opens the **Gmail app or default Mail app**
-  - Subject appears in the **Subject field**
-  - Email content appears in the **Body**
-- 👆 Users can edit, add attachments, and tap **Send** manually
-
-This ensures the same high-quality experience across **desktop, Android, and iOS**.
-
----
-
-## 🧠 Why “Open in Gmail” Instead of Auto-Send?
-
-This project intentionally avoids auto-sending emails to preserve:
-
-- ✅ Sender authenticity (email is sent from the user’s own Gmail)
-- ✅ Academic & professional credibility
-- ✅ User trust and control
-- ✅ Ethical AI usage
-
-This design mirrors real-world tools like **Grammarly** and **Notion AI**, where AI assists in writing — not impersonating users.
+- 🧠 **AI-Powered Generation**: Transform brief points into polished emails using DeepSeek LLM via OpenRouter.
+- ✍️ **Structured Output**: Automatically generates Subject, Salutation, Body, and Sign-off.
+- 📧 **Direct Gmail Integration**: 
+  - Subject auto-filled in Gmail **subject field**.
+  - Email body cleaned and formatted correctly.
+  - One-click draft creation on both **desktop and mobile**.
+- 📱 **Responsive Design**: Fully optimized for mobile browsers.
+- 📝 **Editable Drafts**: Review and tweak the AI's suggestions before sending.
+- 🔄 **Draft History**: Remembers your last 10 generated emails locally.
+- ⚡ **High Performance**: Built with Next.js 15+ and FastAPI.
 
 ---
 
 ## 🏗️ Tech Stack
 
-### Frontend
-- **Next.js (App Router)**
-- **React**
-- **TypeScript**
-- **Tailwind CSS**
-- **Framer Motion**
-- **React Markdown**
-
-### Backend
-- **FastAPI**
-- **Python**
-- **OpenRouter API**
-- **DeepSeek LLM**
-- **Uvicorn**
-
-### Deployment
-- **Frontend:** Vercel
-- **Backend:** Render
+- **Frontend**: Next.js (App Router), React 19, Tailwind CSS, Framer Motion, Lucide React.
+- **Backend**: FastAPI, Python 3.11+, Uvicorn.
+- **AI Engine**: OpenRouter API (DeepSeek Chat).
+- **Deployment**: Vercel (Frontend), Render (Backend).
 
 ---
 
-## 🔄 Application Flow
+## 🚀 Local Setup
 
-1. User provides context, dates, and key points
-2. AI generates a structured email draft
-3. User edits and reviews the content
-4. Clicking **Open in Gmail**:
-   - Opens Gmail (desktop) or Mail/Gmail app (mobile)
-   - Subject is filled in the subject field
-   - Body is formatted and ready
-5. User optionally adds attachments and manually clicks **Send**
+### Backend
+1. Navigate to the `backend` folder:
+   ```bash
+   cd backend
+   ```
+2. Create a virtual environment and install dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+3. Create a `.env` file and add your OpenRouter API Key:
+   ```env
+   OPENROUTER_API_KEY=your_key_here
+   ```
+4. Run the server:
+   ```bash
+   python app.py
+   ```
+
+### Frontend
+1. Navigate to the `frontend` folder:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env.local` file:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8080
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
 ---
 
@@ -100,14 +83,22 @@ This design mirrors real-world tools like **Grammarly** and **Notion AI**, where
 
 ```text
 ai_email_generator/
-│
-├── frontend/        # Next.js frontend (desktop + mobile UI)
-│   ├── src/
-│   ├── public/
-│   └── .env.local
-│
+├── frontend/        # Next.js frontend
 ├── backend/         # FastAPI backend
-│   ├── app.py
-│   └── requirements.txt
-│
-└── README.md
+└── README.md        # Project documentation
+```
+
+---
+
+## 🧠 Design Philosophy
+
+This project intentionally avoids fully automated sending to ensure:
+- **Authenticity**: Emails come from your actual account, not a proxy.
+- **Control**: You have the final say on every word sent.
+- **Ethics**: Prevents accidental spam or AI hallucinations from being sent without oversight.
+
+---
+
+## 📄 License
+
+MIT License - feel free to use and modify for your own projects!
