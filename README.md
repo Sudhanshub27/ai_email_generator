@@ -9,7 +9,6 @@ Instead of auto-sending emails, the app opens a **pre-filled Gmail draft** (on b
 ## 🌐 Live Demo
 
 👉 **Website:** [https://ai-email-generator-iota.vercel.app/](https://ai-email-generator-iota.vercel.app/)  
-👉 **Backend API (Swagger):** [https://ai-email-generator-6af2.onrender.com/docs](https://ai-email-generator-6af2.onrender.com/docs)  
 
 ---
 
